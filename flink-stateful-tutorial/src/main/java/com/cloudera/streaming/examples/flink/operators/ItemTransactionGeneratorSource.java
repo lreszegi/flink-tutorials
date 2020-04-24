@@ -35,19 +35,22 @@ import java.util.concurrent.ThreadLocalRandom;
 public class ItemTransactionGeneratorSource implements ParallelSourceFunction<ItemTransaction> {
 
 	public static final String NUM_ITEMS_KEY = "num.items";
-	public static final String SLEEP_KEY = "sleep";
+	public static final String SLEEP_MILLIS_KEY = "sleep.millis";
+	public static final String SLEEP_NANOS_KEY = "sleep.nanos";
 	public static final String PARETO_SHAPE_KEY = "pareto.shape";
 	public static final int DEFAULT_NUM_ITEMS = 1_000;
 	public static final int DEFAULT_SHAPE = 15;
 	private static final Logger LOG = LoggerFactory.getLogger(ItemTransactionGeneratorSource.class);
 	private final int numItems;
-	private final long sleep;
+	private final long sleepMillis;
+	private final int sleepNanos;
 	private final int shape;
 	private volatile boolean isRunning = true;
 
 	public ItemTransactionGeneratorSource(ParameterTool params) {
 		this.numItems = params.getInt(NUM_ITEMS_KEY, DEFAULT_NUM_ITEMS);
-		this.sleep = params.getLong(SLEEP_KEY, 0);
+		this.sleepMillis = params.getInt(SLEEP_MILLIS_KEY, 0);
+		this.sleepNanos = params.getInt(SLEEP_NANOS_KEY, 0);
 		this.shape = params.getInt(PARETO_SHAPE_KEY, DEFAULT_SHAPE);
 	}
 
@@ -56,7 +59,7 @@ public class ItemTransactionGeneratorSource implements ParallelSourceFunction<It
 		ThreadLocalRandom rnd = ThreadLocalRandom.current();
 		ParetoDistribution paretoDistribution = new ParetoDistribution(numItems, shape);
 
-		LOG.info("Starting data generator for {} items and {} sleep", numItems, sleep);
+		LOG.info("Starting data generator for {} items and {} sleep millis {} sleep nanos", numItems, sleepMillis, sleepNanos);
 
 		while (isRunning) {
 			long nextItemId;
@@ -73,8 +76,8 @@ public class ItemTransactionGeneratorSource implements ParallelSourceFunction<It
 			synchronized (ctx.getCheckpointLock()) {
 				ctx.collect(new ItemTransaction(transactionId, System.currentTimeMillis(), itemId, quantity));
 			}
-			if (sleep > 0) {
-				Thread.sleep(sleep);
+			if (sleepMillis > 0 || sleepNanos > 0) {
+				Thread.sleep(sleepMillis, sleepNanos);
 			}
 		}
 
