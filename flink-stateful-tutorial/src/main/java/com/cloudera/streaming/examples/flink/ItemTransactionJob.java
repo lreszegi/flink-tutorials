@@ -104,6 +104,11 @@ public abstract class ItemTransactionJob {
 		// We set max parallelism to a number with a lot of divisors
 		env.setMaxParallelism(360);
 
+		int parallelism = params.getInt("parallelism", 0);
+		if (parallelism > 0) {
+			env.setParallelism(parallelism);
+		}
+
 		// Configure checkpointing if interval is set
 		long cpInterval = params.getLong("checkpoint.interval.millis", TimeUnit.MINUTES.toMillis(1));
 		if (cpInterval > 0) {
