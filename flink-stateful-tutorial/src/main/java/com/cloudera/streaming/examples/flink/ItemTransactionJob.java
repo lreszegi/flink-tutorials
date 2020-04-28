@@ -107,7 +107,6 @@ public abstract class ItemTransactionJob {
 		int parallelism = params.getInt("parallelism", 0);
 		if (parallelism > 0) {
 			env.setParallelism(parallelism);
-			System.out.println("PARALLELISM: " + parallelism);
 		}
 
 		// Configure checkpointing if interval is set
